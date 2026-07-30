@@ -12,7 +12,6 @@ fn test_035_text() -> HdbResult<()> {
     let mut log_handle = test_utils::init_logger();
     let start = std::time::Instant::now();
     let connection = test_utils::get_authenticated_connection()?;
-    println!("{:?}",connection);
     if !prepare_test(&connection) {
         info!("TEST ABANDONED since database does not support TEXT columns");
         return Ok(());
