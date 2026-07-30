@@ -12,13 +12,14 @@ fn test_035_text() -> HdbResult<()> {
     let mut log_handle = test_utils::init_logger();
     let start = std::time::Instant::now();
     let connection = test_utils::get_authenticated_connection()?;
-
+    println!("{:?}",connection);
     if !prepare_test(&connection) {
         info!("TEST ABANDONED since database does not support TEXT columns");
         return Ok(());
     }
 
     test_text(&mut log_handle, &connection)?;
+    test_text_bug_issue_60(&mut log_handle, &connection)?;
 
     test_utils::closing_info(connection, start)
 }
@@ -61,3 +62,25 @@ fn test_text(_log_handle: &mut LoggerHandle, connection: &Connection) -> HdbResu
 
     Ok(())
 }
+
+fn test_text_bug_issue_60(_log_handle: &mut LoggerHandle, connection: &Connection) -> HdbResult<()> {
+    info!("test_text_bug_issue_60");
+    /*this bytes length is 33000 is larger than the default 32768,i16:MAX. currently the function  binary_length
+    in hdb_value.rs file will add 5 to calculate the length, so the length will be 33005, that is wrong.it will happen an
+    an error ConnectionBroken "{ source: Some(Io { source: Os { code: 104, kind: ConnectionReset, message: "Connection reset by peer" } }) }“
+    because of the wrong length calculation. The correct  calculation should be if length < 65535, then length is add 3.
+    so we need to change  const MAX_2_BYTE_LENGTH: i16 = i16::MAX;32768 to const MAX_2_BYTE_LENGTH: u16 = u16::MAX;65535 in file length_indicator.rs
+    */
+    let large_text = "这是一段非常大的文本...".repeat(1000);
+    // info!("large_text: {}", large_text.len());
+    let test_text = large_text.as_str();
+    debug!("prepare...");
+    let mut insert_stmt =
+        connection.prepare("insert into TEST_TEXT (chardata, chardata_nn) values (?,?)")?;
+    debug!("execute...");
+    insert_stmt.execute(&(test_text, test_text))?;
+    
+    Ok(())
+}
+
+
