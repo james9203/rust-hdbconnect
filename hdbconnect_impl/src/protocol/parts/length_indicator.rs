@@ -2,7 +2,7 @@ use crate::{HdbResult, impl_err};
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt, WriteBytesExt};
 
 pub(crate) const MAX_1_BYTE_LENGTH: u8 = 245;
-pub(crate) const MAX_2_BYTE_LENGTH: i16 = i16::MAX;
+pub(crate) const MAX_2_BYTE_LENGTH: u16 = u16::MAX;
 const LENGTH_INDICATOR_2BYTE: u8 = 246;
 const LENGTH_INDICATOR_4BYTE: u8 = 247;
 pub(crate) const LENGTH_INDICATOR_NULL: u8 = 255;
